@@ -1,64 +1,22 @@
 <template>
   <div id="home">
     <nav-bar class="navbar"><div slot="center">购物街</div></nav-bar>
-    <home-swiper :banners="banners"></home-swiper>
-    <recommend-view :recommends="recommends"/>
-    <feature-view></feature-view>
-    <tab-control :titles="['流行', '新款', '精选']" class="tab-control" @tabClick="tabClick"/>
-    <goods-list :goods="showGoods"/>
 
-    <ul>
-      <li>列表1</li>
-      <li>列表2</li>
-      <li>列表3</li>
-      <li>列表4</li>
-      <li>列表5</li>
-      <li>列表6</li>
-      <li>列表7</li>
-      <li>列表8</li>
-      <li>列表9</li>
-      <li>列表10</li>
-      <li>列表11</li>
-      <li>列表12</li>
-      <li>列表13</li>
-      <li>列表14</li>
-      <li>列表15</li>
-      <li>列表16</li>
-      <li>列表17</li>
-      <li>列表18</li>
-      <li>列表19</li>
-      <li>列表20</li>
-      <li>列表21</li>
-      <li>列表22</li>
-      <li>列表23</li>
-      <li>列表24</li>
-      <li>列表25</li>
-      <li>列表26</li>
-      <li>列表27</li>
-      <li>列表28</li>
-      <li>列表29</li>
-      <li>列表30</li>
-      <li>列表31</li>
-      <li>列表32</li>
-      <li>列表33</li>
-      <li>列表34</li>
-      <li>列表35</li>
-      <li>列表36</li>
-      <li>列表37</li>
-      <li>列表38</li>
-      <li>列表39</li>
-      <li>列表40</li>
-      <li>列表41</li>
-      <li>列表42</li>
-      <li>列表43</li>
-      <li>列表44</li>
-      <li>列表45</li>
-      <li>列表46</li>
-      <li>列表47</li>
-      <li>列表48</li>
-      <li>列表49</li>
-      <li>列表50</li>
-    </ul>
+    <scroll class="content" ref="scroll" 
+    :probe-type="3" 
+    @scroll="contentScroll"
+    :pull-up-load="true"
+    @pullingUp="upLoadMore"
+    >
+      <home-swiper :banners="banners"></home-swiper>
+      <recommend-view :recommends="recommends"/>
+      <feature-view></feature-view>
+      <tab-control :titles="['流行', '新款', '精选']" class="tab-control" @tabClick="tabClick"/>
+      <goods-list :goods="showGoods"/>
+    </scroll>
+    
+    <back-top @click.native="topClick" v-show="isShow"/>
+    
   </div>
 </template>
 
@@ -70,6 +28,8 @@
   import NavBar from 'components/common/navbar/NavBar'
   import TabControl from 'components/content/tabControl/TabControl'
   import GoodsList from 'components/content/goods/GoodsList'
+  import Scroll from 'components/common/scroll/Scroll'
+  import BackTop from 'components/content/backtop/BackTop'
 
   import {getHomeMultidata, getHomeGoodsData} from 'network/home'
 
@@ -82,7 +42,9 @@
       FeatureView,
       NavBar,
       TabControl,
-      GoodsList
+      GoodsList,
+      Scroll,
+      BackTop
     },
     data() {
       return {
@@ -93,7 +55,8 @@
           'new': {page: 0, list: []},
           'sell': {page: 0, list: []}
         },
-        currentType: 'pop'
+        currentType: 'pop',
+        isShow: false
       }
     },
     created() {
@@ -125,7 +88,18 @@
             break
         }
       },
+      topClick() {
+        this.$refs.scroll.scrollTo(0,0)
+      },
+      contentScroll(position) {
+        // console.log(position);
+        this.isShow = (-position.y) > 1000
+      },
+      upLoadMore() {
+        this.getHomeGoodsData(this.currentType)
 
+        
+      },
 
       // 请求数据的方法
       getHomeMultidata() {
@@ -141,6 +115,9 @@
           
           this.goods[type].list.push(...res.data.list)
           this.goods[type].page += 1
+
+          this.$refs.scroll.finishPullUp()
+
         })
       }
     }
@@ -148,12 +125,21 @@
 </script>
 
 <style scoped>
+  #home {
+    padding-top: 44px;
+    height: 100vh;
+  }
   .navbar {
     background-color: var(--color-tint);
     color: #fff;
   }
   .tab-control {
-    position: sticky;
-    top: 44px;
+    /* position: sticky;
+    top: 44px; */
+    z-index: 9;
+  }
+  .content {
+    height: calc(100% - 49px);
+    overflow: hidden;
   }
 </style>
