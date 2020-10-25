@@ -1,6 +1,9 @@
 <template>
   <div id="home">
     <nav-bar class="navbar"><div slot="center">购物街</div></nav-bar>
+    <tab-control :titles="['流行', '新款', '精选']"  @tabClick="tabClick" ref="tabControl1"
+      class="tab-control" v-show="showTabControl"
+      />
 
     <scroll class="content" ref="scroll" 
     :probe-type="3" 
@@ -8,10 +11,12 @@
     :pull-up-load="true"
     @pullingUp="upLoadMore"
     >
-      <home-swiper :banners="banners"></home-swiper>
+      <home-swiper :banners="banners" @swiperImageLoad="swiperImageLoad"></home-swiper >
       <recommend-view :recommends="recommends"/>
       <feature-view></feature-view>
-      <tab-control :titles="['流行', '新款', '精选']"  @tabClick="tabClick"/>
+      <tab-control :titles="['流行', '新款', '精选']"  @tabClick="tabClick" ref="tabControl2"
+      
+      />
       <goods-list :goods="showGoods"/>
     </scroll>
     
@@ -57,8 +62,19 @@
           'sell': {page: 0, list: []}
         },
         currentType: 'pop',
-        isShow: false
+        isShow: false,
+        tabOffsetTop: 0,
+        showTabControl: false,
+        saveY: 0
       }
+    },
+    activated () {
+      this.$refs.scroll.scrollTo(0, this.saveY, 0)
+      this.$refs.scroll.refresh()
+    },
+    deactivated () {
+      this.saveY = this.$refs.scroll.saveScrollY()
+      
     },
     created() {
       // 1. 请求首页轮播图和推荐页面数据
@@ -98,16 +114,26 @@
             this.currentType = 'sell'
             break
         }
+        this.$refs.tabControl1.currentIndex = index
+        this.$refs.tabControl2.currentIndex = index 
       },
       topClick() {
         this.$refs.scroll.scrollTo(0,0)
       },
       contentScroll(position) {
+        // 1.实现返回顶部按钮
         // console.log(position);
         this.isShow = (-position.y) > 1000
+
+        // 2. 实现tanControl吸顶效果
+        this.showTabControl = (-position.y) > this.tabOffsetTop
+
       },
       upLoadMore() {
         this.getHomeGoodsData(this.currentType)
+      },
+      swiperImageLoad() {
+        this.tabOffsetTop = this.$refs.tabControl2.$el.offsetTop
       },
 
       // 请求数据的方法
@@ -135,8 +161,8 @@
 
 <style scoped>
   #home {
-    padding-top: 44px;
     height: 100vh;
+    position: relative;
   }
   .navbar {
     background-color: var(--color-tint);
@@ -144,7 +170,16 @@
   }
   
   .content {
-    height: calc(100% - 49px);
     overflow: hidden;
+    position: absolute;
+    top: 44px;
+    bottom: 49px;
+    left: 0;
+    right: 0;
+  }
+  
+  .tab-control {
+    position: relative;
+    z-index: 9;
   }
 </style>
