@@ -11,7 +11,7 @@
       <home-swiper :banners="banners"></home-swiper>
       <recommend-view :recommends="recommends"/>
       <feature-view></feature-view>
-      <tab-control :titles="['流行', '新款', '精选']" class="tab-control" @tabClick="tabClick"/>
+      <tab-control :titles="['流行', '新款', '精选']"  @tabClick="tabClick"/>
       <goods-list :goods="showGoods"/>
     </scroll>
     
@@ -32,6 +32,7 @@
   import BackTop from 'components/content/backtop/BackTop'
 
   import {getHomeMultidata, getHomeGoodsData} from 'network/home'
+  import {debounce} from 'common/utils'
 
 
   export default {
@@ -67,6 +68,15 @@
       this.getHomeGoodsData('pop')
       this.getHomeGoodsData('new')
       this.getHomeGoodsData('sell')
+
+    },
+    mounted () {
+      // 1. 监听图片加载事件
+      const refresh = debounce(this.$refs.scroll.refresh, 200)
+       
+      this.$bus.$on('refresh',() => {
+        refresh()
+      })
     },
     computed: {
       showGoods() {
@@ -74,6 +84,7 @@
       }
     },
     methods: {
+      
       // 监听事件的方法
       tabClick(index) {
         switch(index) {
@@ -97,8 +108,6 @@
       },
       upLoadMore() {
         this.getHomeGoodsData(this.currentType)
-
-        
       },
 
       // 请求数据的方法
@@ -133,11 +142,7 @@
     background-color: var(--color-tint);
     color: #fff;
   }
-  .tab-control {
-    /* position: sticky;
-    top: 44px; */
-    z-index: 9;
-  }
+  
   .content {
     height: calc(100% - 49px);
     overflow: hidden;
