@@ -37,7 +37,7 @@
   import BackTop from 'components/content/backtop/BackTop'
 
   import {getHomeMultidata, getHomeGoodsData} from 'network/home'
-  import {debounce} from 'common/utils'
+  import {itemListenerMixin} from 'common/mixin'
 
 
   export default {
@@ -65,18 +65,24 @@
         isShow: false,
         tabOffsetTop: 0,
         showTabControl: false,
-        saveY: 0
+        saveY: 0,
+        itemImgListener: null
       }
     },
+    mixins: [itemListenerMixin],
     activated () {
       this.$refs.scroll.scrollTo(0, this.saveY, 0)
       this.$refs.scroll.refresh()
     },
     deactivated () {
+      // 1.保存Y值
       this.saveY = this.$refs.scroll.saveScrollY()
+      // 2.取消全局事件的监听
+      this.$bus.$off('refresh', this.itemImgListener)
       
     },
     created() {
+      
       // 1. 请求首页轮播图和推荐页面数据
       this.getHomeMultidata()
 
@@ -85,14 +91,6 @@
       this.getHomeGoodsData('new')
       this.getHomeGoodsData('sell')
 
-    },
-    mounted () {
-      // 1. 监听图片加载事件
-      const refresh = debounce(this.$refs.scroll.refresh, 200)
-       
-      this.$bus.$on('refresh',() => {
-        refresh()
-      })
     },
     computed: {
       showGoods() {
@@ -115,7 +113,8 @@
             break
         }
         this.$refs.tabControl1.currentIndex = index
-        this.$refs.tabControl2.currentIndex = index 
+        this.$refs.tabControl2.currentIndex = index
+         
       },
       topClick() {
         this.$refs.scroll.scrollTo(0,0)
