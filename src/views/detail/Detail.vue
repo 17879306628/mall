@@ -2,6 +2,7 @@
 <template>
   <div id="detail">
     <detail-nav-bar class="detail-nav" @titleClick="titleClick" ref="detailNav"></detail-nav-bar>
+   
     <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
       <detail-swiper :top-images="topImages"></detail-swiper>
       <detail-base-info :goods="goods"></detail-base-info>
@@ -11,6 +12,10 @@
       <detail-comment-info ref="comment" :comment-info="commentInfo"></detail-comment-info>
       <goods-list ref="recommend" :goods="recommends"></goods-list>
     </scroll>
+    
+    <back-top @click.native="topClick" v-show="isShow"/>
+
+    <detail-bottom-bar @addCart="addToCart"></detail-bottom-bar>
   </div>
 </template>
 
@@ -22,12 +27,13 @@
   import DetailGoodsInfo from './childDetail/DetailGoodsInfo'
   import DetailParamsInfo from './childDetail/DetailParamsInfo'
   import DetailCommentInfo from './childDetail/DetailCommentInfo'
+  import DetailBottomBar from './childDetail/DetailBottomBar'
 
   import Scroll from 'components/common/scroll/Scroll'
   import GoodsList from 'components/content/goods/GoodsList'
 
   import {getDetail, Goods, Shop, GoodsParam, getRecommends} from 'network/detail'
-  import {itemListenerMixin} from 'common/mixin'
+  import {itemListenerMixin, backTopMixin} from 'common/mixin'
   import {debounce} from 'common/utils.js'
 
   export default {
@@ -40,10 +46,11 @@
       DetailGoodsInfo,
       DetailParamsInfo,
       DetailCommentInfo,
+      DetailBottomBar,
       Scroll,
       GoodsList
     },
-    mixins: [itemListenerMixin],
+    mixins: [itemListenerMixin, backTopMixin],
     data() {
       return {
         iid: null,
@@ -98,6 +105,8 @@
         //console.log(res);
         this.recommends = res.data.list
       })
+
+      
     },
     methods: {
       imageLoad() {
@@ -108,6 +117,7 @@
         this.$refs.scroll.scrollTo(0, -this.themeTopY[index], 200)
       },
       contentScroll(position) {
+        this.isShow = (-position.y) > 1000
         const positionY = -position.y
         let length = this.themeTopY.length
         for(let i = 0; i < length - 1; i++) {
@@ -116,6 +126,15 @@
             this.$refs.detailNav.currentIndex = this.currentIndex
           }
         }
+      },
+      addToCart() {
+        const product = {}
+        product.image = this.topImages[0]
+        product.title = this.goods.title
+        product.desc = this.goods.desc
+        product.price = this.goods.realPrice
+        product.iid = this.iid
+        this.$store.dispatch('addCart', product)
       }
 
     },
@@ -129,7 +148,7 @@
 <style  scoped>
   #detail {
     position: relative;
-    z-index: 9;
+    z-index: 100;
     background-color: #fff;
     height: 100vh;
   }
@@ -140,6 +159,6 @@
   }
 
   .content {
-    height: calc(100% - 44px);
+    height: calc(100% - 44px - 58px);
   }
 </style>
