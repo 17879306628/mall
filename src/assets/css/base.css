@@ -1,5 +1,8 @@
 @import "./normalize.css";
 
+* {
+  touch-action: pan-y;
+}
 
 /* root 获取根元素html */
 :root {
