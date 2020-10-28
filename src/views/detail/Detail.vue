@@ -128,13 +128,20 @@
         }
       },
       addToCart() {
+        // 1.获取购物车需要的信息
         const product = {}
         product.image = this.topImages[0]
         product.title = this.goods.title
         product.desc = this.goods.desc
         product.price = this.goods.realPrice
         product.iid = this.iid
-        this.$store.dispatch('addCart', product)
+        // 2.将商品添加到购物车中
+        // vuex中的actions可以返回一个Promise函数
+
+        this.$store.dispatch('addCart', product).then(res => {
+          // 返回值显示模态框
+          this.$toast.show(res)
+        })
       }
 
     },
